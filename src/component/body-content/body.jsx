@@ -19,5 +19,4 @@ const Body = () => {
   );
 };
 
-shanikotadiya
 export default Body;
