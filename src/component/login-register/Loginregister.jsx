@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 // import loginbg from "../../componentpic/login-reg2.jpg";
 // import '../jquery';
-import axios from "axios";
 import $ from "jquery";
 import "./login-register.css";
+import axios from "axios";
 
 const Loginregister = () => {
   $(document).ready(function () {
@@ -22,35 +22,6 @@ const Loginregister = () => {
   const [loginemail, setloginemail] = useState("");
   const [loginpassword, setloginpassword] = useState("");
 
-  const handleloginsubmit = (e) => {
-    e.preventDefault();
-    try {
-      if (loginemail && loginpassword) {
-        const formdata = new FormData();
-        formdata.append("email", loginemail);
-        formdata.append("password", loginpassword);
-
-        axios
-          .post("http://localhost:5001/users/login'", formdata, {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          })
-          .then((res) => {
-            console.log(res.data.message);
-          })
-          .catch((err) => {
-            console.error("Upload error:", err);
-          });
-        navigate("/login");
-      } else {
-        alert("input invalid");
-      }
-    } catch (error) {
-      console.log("Error:", error);
-    }
-  };
-
   const handleregistersubmit = (e) => {
     e.preventDefault();
     try {
@@ -59,6 +30,8 @@ const Loginregister = () => {
         formdata.append("username", username);
         formdata.append("email", email);
         formdata.append("password", password);
+
+        console.log(formdata);
 
         axios
           .post("http://localhost:5001/users", formdata, {
@@ -72,7 +45,7 @@ const Loginregister = () => {
           .catch((err) => {
             console.error("Upload error:", err);
           });
-        navigate("/login");
+        // navigate("/login");
       } else {
         alert("input invalid");
       }
@@ -80,7 +53,38 @@ const Loginregister = () => {
       console.log("Error:", error);
     }
   };
+  
+  
+  const handleloginsubmit = (e) => {
+    e.preventDefault();
+    try {
+    if (loginemail && loginpassword) {
+        const formdata = new FormData();
+        formdata.append("email", loginemail);
+        formdata.append("password", loginpassword);
 
+        axios
+        .post("http://localhost:5001/users/login'", formdata, {
+            headers: {
+            "Content-Type": "multipart/form-data",
+            },
+        })
+        .then((res) => {
+            console.log(res.data.message);
+        })
+        .catch((err) => {
+            console.error("Upload error:", err);
+        });
+        navigate("/login");
+    } else {
+        alert("input invalid");
+    }
+    } catch (error) {
+    console.log("Error:", error);
+    }
+};
+
+ 
   return (
     <>
       <div className="login-register-body">
@@ -98,7 +102,7 @@ const Loginregister = () => {
                 <input
                   type="text"
                   required
-                  onChange={(event) => setloginemail(event.target.value)}
+                  // onChange={(event) => setloginemail(event.target.value)}
                 />
                 <label> Email</label>
               </div>
@@ -109,7 +113,7 @@ const Loginregister = () => {
                 <input
                   type="password"
                   required
-                  onChange={(event) => setloginpassword(event.target.value)}
+                  // onChange={(event) => setloginpassword(event.target.value)}
                 />
                 <label> Password</label>
               </div>
