@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import $ from "jquery";
 import "./login-register.css";
 import axios from "axios";
+import uploadimg from "../../componentpic/upload.png";
 
 const Loginregister = () => {
   $(document).ready(function () {
@@ -19,22 +20,27 @@ const Loginregister = () => {
   const [username, setUsername] = useState("");
   const [email, setemail] = useState("");
   const [password, setPassword] = useState("");
-  const [loginemail, setloginemail] = useState("");
-  const [loginpassword, setloginpassword] = useState("");
+  const [image, setimage] = useState(null);
+
+  // const [loginemail, setloginemail] = useState("");
+  // const [loginpassword, setloginpassword] = useState("");
+
+  const handleimagechange = (event) => {
+    setimage(event.target.files[0]);
+  };
 
   const handleregistersubmit = (e) => {
     e.preventDefault();
     try {
-      if (email && password) {
+      if (email && password && image) {
         const formdata = new FormData();
         formdata.append("username", username);
         formdata.append("email", email);
         formdata.append("password", password);
-
-        console.log(formdata);
-
+        formdata.append("image", image);
+        
         axios
-          .post("http://localhost:5001/users", formdata, {
+          .post("http://localhost:5000/users", formdata, {
             headers: {
               "Content-Type": "multipart/form-data",
             },
@@ -53,38 +59,36 @@ const Loginregister = () => {
       console.log("Error:", error);
     }
   };
-  
-  
+
   const handleloginsubmit = (e) => {
     e.preventDefault();
     try {
-    if (loginemail && loginpassword) {
+      if (loginemail && loginpassword) {
         const formdata = new FormData();
         formdata.append("email", loginemail);
         formdata.append("password", loginpassword);
 
         axios
-        .post("http://localhost:5001/users/login'", formdata, {
+          .post("http://localhost:5001/users/login'", formdata, {
             headers: {
-            "Content-Type": "multipart/form-data",
+              "Content-Type": "multipart/form-data",
             },
-        })
-        .then((res) => {
+          })
+          .then((res) => {
             console.log(res.data.message);
-        })
-        .catch((err) => {
+          })
+          .catch((err) => {
             console.error("Upload error:", err);
-        });
+          });
         navigate("/login");
-    } else {
+      } else {
         alert("input invalid");
-    }
+      }
     } catch (error) {
-    console.log("Error:", error);
+      console.log("Error:", error);
     }
-};
+  };
 
- 
   return (
     <>
       <div className="login-register-body">
@@ -142,7 +146,20 @@ const Loginregister = () => {
             <h2>Registration</h2>
             <form onSubmit={handleregistersubmit}>
               <div className="profile-select">
-                <ion-icon name="person-circle"></ion-icon>
+                <label htmlFor="profile-pic" className="profile-pic-label">
+                  <img
+                    src={image ? URL.createObjectURL(image) : uploadimg}
+                    alt="Profile"
+                    className="profile-pic"
+                  />
+                  <input
+                    type="file"
+                    id="profile-pic"
+                    className="profile-pic-input"
+                    onChange={handleimagechange}
+                    accept="image/*"
+                  />
+                </label>
               </div>
               <div className="input-box">
                 <span className="icon">

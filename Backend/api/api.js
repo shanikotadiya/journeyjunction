@@ -9,22 +9,22 @@ const cors = require("cors"); // Import the cors package
 const bcrypt = require("bcrypt");
 
 const multer = require("multer");
-// const fs = require('fs');
-// const mongoose = require("mongoose");
-// const File = require('./fileSchema.js');
+const fs = require("fs");
+const mongoose = require("mongoose");
+const File = require("./fileSchema.js");
 
 const app = express();
 const uri =
   "mongodb+srv://shanikotadiya:ula918oCIYFShP9k@journeyjunction.qsv0wiz.mongodb.net/";
 const client = new MongoClient(uri);
-const port = 5001;
+const port = 5000;
 
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
-// app.set("view engine,", "ejs");
-// app.set("views", path.join(__dirname, "views"));
-// app.use(express.static(`${__dirname}/public`))
+app.set("view engine,", "ejs");
+app.set("views", path.join(__dirname, "views"));
+app.use(express.static(`${__dirname}/public`));
 
 client
   .connect(uri, {
@@ -60,6 +60,20 @@ const initializeDatabase = async (dbname, tablename) => {
   }
 };
 
+const storage = multer.memoryStorage(
+  {
+  destination: (req, file, cb) => {
+    cb(null, "upload/");
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  },
+}
+);
+
+const upload = multer({ storage: storage });
+
 app.use(async (req, res, next) => {
   try {
     const dbconn = await initializeDatabase("journeyjunction", "users");
@@ -71,19 +85,22 @@ app.use(async (req, res, next) => {
   }
 });
 
-const upload = multer();
-
-app.route("/users")
-.post(upload.none(), async (req, res) => {
+app.route("/users").post(upload.single('image'), async (req, res) => {
   try {
-    console.log(req.body);
     const { email, username, password } = req.body;
     const user = await req.collection.findOne({ username: username });
+    // const { originalname, mimetype, buffer, size } = req.file;
+
     if (user == null) {
       //   const hashedPassword = await bcrypt.hash(password, 10);
       const data = { username, email, password };
       const result = await req.collection.insertOne(data);
-
+      // console.log(result);
+      await File.create({
+        data: req.file.buffer,
+        contentType: req.file.mimetype
+    });
+    res.send('Image uploaded successfully.');
       return res.json({ message: "data inserted", result, status: 200 });
     }
     res
