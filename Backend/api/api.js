@@ -5,7 +5,7 @@ const path = require("path");
 const secretKey = "fjkhdahsdadhaskdhasjkdhadasdad";
 const cors = require("cors"); // Import the cors package
 // const { ObjectId } = require('mongodb');
-// const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
 const multer = require("multer");
@@ -60,20 +60,6 @@ const initializeDatabase = async (dbname, tablename) => {
   }
 };
 
-const storage = multer.memoryStorage(
-  {
-  destination: (req, file, cb) => {
-    cb(null, "upload/");
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  },
-}
-);
-
-const upload = multer({ storage: storage });
-
 app.use(async (req, res, next) => {
   try {
     const dbconn = await initializeDatabase("journeyjunction", "users");
@@ -85,30 +71,70 @@ app.use(async (req, res, next) => {
   }
 });
 
-app.route("/users").post(upload.single('image'), async (req, res) => {
-  try {
-    const { email, username, password } = req.body;
-    const user = await req.collection.findOne({ username: username });
-    // const { originalname, mimetype, buffer, size } = req.file;
+//---------------------------------USER REGISTRATION API--------------------------------------------
 
+app.route("/users").post(async (req, res) => {
+  try {
+    console.log(req.body);
+    const { email, username, password } = req.body;
+    console.log(email, username, password);
+    const user = await req.collection.findOne({ username: username });
     if (user == null) {
-      //   const hashedPassword = await bcrypt.hash(password, 10);
-      const data = { username, email, password };
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const data = { username, email, hashedPassword };
       const result = await req.collection.insertOne(data);
-      // console.log(result);
-      await File.create({
-        data: req.file.buffer,
-        contentType: req.file.mimetype
-    });
-    res.send('Image uploaded successfully.');
-      return res.json({ message: "data inserted", result, status: 200 });
+      return res.json(ResponseFormatter(200, result, "data inserted"));
     }
     res
       .status(401)
-      .json({ message: "username is already avaliable", status: 401 });
+      .json(ResponseFormatter(401, null, "username is already avaliable"));
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "internal server error" });
+    res.json(ResponseFormatter(500, null, "internal server error"));
+  }
+});
+
+//-------------------------------USER LOGIN API----------------------------------------------------
+
+app.route("/users/login").post(async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    console.log(email, password);
+    const user = await req.collection.findOne({ email });
+    console.log(user);
+
+    if (!user || !(await bcrypt.compare(password, user.hashedPassword))) {
+      return res.json(ResponseFormatter(401, null, "Authentication failed"));
+    }
+
+    const token = jwt.sign({ email }, secretKey, { expiresIn: "1h" });
+
+    if (!token) {
+      return res.json(ResponseFormatter(500, null, "Token generation failed"));
+    }
+
+    const result = await req.collection.updateOne(
+      { email },
+      { $set: { token } }
+    );
+    if (result.modifiedCount === 1) {
+      return res.json(
+        ResponseFormatter(
+          200,
+          {
+            token: token,
+            currentuserid: user._id.toString(),
+            currentusername: user.username,
+          },
+          "Login Successfull"
+        )
+      );
+    } else {
+      console.log("Token update failed");
+    }
+  } catch (err) {
+    console.error("Login error:", err);
+    return res.json(ResponseFormatter(500, null, "Internal server error"));
   }
 });
 

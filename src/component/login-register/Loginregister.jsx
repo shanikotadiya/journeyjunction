@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 // import loginbg from "../../componentpic/login-reg2.jpg";
 // import '../jquery';
 import $ from "jquery";
 import "./login-register.css";
 import axios from "axios";
-import uploadimg from "../../componentpic/upload.png";
+import { useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Loginregister = () => {
   $(document).ready(function () {
@@ -17,41 +19,48 @@ const Loginregister = () => {
     });
   });
 
+  //---------------------------------REGISTER-----------------------------
+
   const [username, setUsername] = useState("");
   const [email, setemail] = useState("");
   const [password, setPassword] = useState("");
-  const [image, setimage] = useState(null);
-
-  // const [loginemail, setloginemail] = useState("");
-  // const [loginpassword, setloginpassword] = useState("");
-
-  const handleimagechange = (event) => {
-    setimage(event.target.files[0]);
-  };
 
   const handleregistersubmit = (e) => {
     e.preventDefault();
     try {
-      if (email && password && image) {
+      if (email && password) {
         const formdata = new FormData();
         formdata.append("username", username);
         formdata.append("email", email);
         formdata.append("password", password);
-        formdata.append("image", image);
-        
+
         axios
           .post("http://localhost:5000/users", formdata, {
             headers: {
-              "Content-Type": "multipart/form-data",
+              "Content-Type": "application/json",
             },
           })
           .then((res) => {
-            console.log(res.data.message);
+            console.log(res.data);
+            if (res.data.status == 200) {
+              toast.success("Register Successfull", {
+                onClose: () => {
+                  window.location.reload();
+                },
+                style: { minWidth: "300px", fontSize: "14px" },
+              });
+            } else {
+              toast.error("something invalid", {
+                style: { minWidth: "300px" },
+              });
+            }
           })
           .catch((err) => {
             console.error("Upload error:", err);
+            toast.error("Network Error", {
+              style: { minWidth: "300px" },
+            });
           });
-        // navigate("/login");
       } else {
         alert("input invalid");
       }
@@ -59,6 +68,12 @@ const Loginregister = () => {
       console.log("Error:", error);
     }
   };
+
+  //---------------------------LOGIN------------------------------
+
+  const [loginemail, setloginemail] = useState("");
+  const [loginpassword, setloginpassword] = useState("");
+  const navigate = useNavigate();
 
   const handleloginsubmit = (e) => {
     e.preventDefault();
@@ -69,18 +84,35 @@ const Loginregister = () => {
         formdata.append("password", loginpassword);
 
         axios
-          .post("http://localhost:5001/users/login'", formdata, {
+          .post("http://localhost:5000/users/login", formdata, {
             headers: {
-              "Content-Type": "multipart/form-data",
+              "Content-Type": "application/json",
             },
           })
           .then((res) => {
-            console.log(res.data.message);
+            console.log(res.data);
+            if (res.data.status == 200) {
+              toast.success("Login Successfull", {
+                onClose: () => {
+                  navigate("/body");
+                },
+                style: { minWidth: "300px" },
+              });
+            } else {
+              toast.error("input invalid", {
+                onClose: () => {
+                  window.location.reload();
+                },
+                style: { minWidth: "300px" },
+              });
+            }
           })
           .catch((err) => {
             console.error("Upload error:", err);
+            toast.error("Network error !", {
+              style: { minWidth: "300px" },
+            });
           });
-        navigate("/login");
       } else {
         alert("input invalid");
       }
@@ -91,6 +123,18 @@ const Loginregister = () => {
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={1000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
       <div className="login-register-body">
         <div className="wrapper">
           <span className="icon-close">
@@ -106,9 +150,9 @@ const Loginregister = () => {
                 <input
                   type="text"
                   required
-                  // onChange={(event) => setloginemail(event.target.value)}
+                  onChange={(event) => setloginemail(event.target.value)}
                 />
-                <label> Email</label>
+                <label>Email</label>
               </div>
               <div className="input-box">
                 <span className="icon">
@@ -117,7 +161,7 @@ const Loginregister = () => {
                 <input
                   type="password"
                   required
-                  // onChange={(event) => setloginpassword(event.target.value)}
+                  onChange={(event) => setloginpassword(event.target.value)}
                 />
                 <label> Password</label>
               </div>
@@ -141,26 +185,9 @@ const Loginregister = () => {
               </div>
             </form>
           </div>
-
           <div className="form-box register">
             <h2>Registration</h2>
             <form onSubmit={handleregistersubmit}>
-              <div className="profile-select">
-                <label htmlFor="profile-pic" className="profile-pic-label">
-                  <img
-                    src={image ? URL.createObjectURL(image) : uploadimg}
-                    alt="Profile"
-                    className="profile-pic"
-                  />
-                  <input
-                    type="file"
-                    id="profile-pic"
-                    className="profile-pic-input"
-                    onChange={handleimagechange}
-                    accept="image/*"
-                  />
-                </label>
-              </div>
               <div className="input-box">
                 <span className="icon">
                   <ion-icon name="person"></ion-icon>

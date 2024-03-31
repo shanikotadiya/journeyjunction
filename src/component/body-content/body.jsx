@@ -6,7 +6,7 @@ import Sourcedest from "../source-dest/Sourcedest";
 import Footer from "../footer/Footer";
 // import  Loginregister from '../login-register/Loginregister.jsx';
 
-const Body = () => {
+const Home = () => {
   return (
     <>
     {/* <Loginregister/> */}
@@ -19,4 +19,4 @@ const Body = () => {
   );
 };
 
-export default Body;
+export default Home;
